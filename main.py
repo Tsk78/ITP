@@ -1,5 +1,5 @@
 import streamlit
-
+from Price_calculator import calculate_price
 
 def check(assert_condition: bool):
     if not assert_condition:
@@ -35,7 +35,7 @@ col1, col2 = streamlit.columns(2)
 
 with col1:
     adults = streamlit.number_input(
-        label="Age 13+",
+        label="Adults (Age 13+)",
         min_value=0,
         max_value=100,
         value=0
@@ -43,7 +43,7 @@ with col1:
 
 with col2:
     kids = streamlit.number_input(
-        label="Age 3-12",
+        label="Kids (Age 3-12)",
         min_value=0,
         max_value=100,
         value=0
@@ -59,6 +59,8 @@ check(adults + kids != 0)
 
 streamlit.divider()
 
+current_type = streamlit.session_state.get("current_ticket_type", -1)
+
 with streamlit.container():
     def create():
         return streamlit.columns([0.30, 0.70])
@@ -66,8 +68,14 @@ with streamlit.container():
     if streamlit.session_state.get("current_ticket_type") is None:
         streamlit.session_state["current_ticket_type"] = -1
 
+    if streamlit.session_state.get("total_price") is None:
+        streamlit.session_state["total_price"] = 0
+
+
     def set_current_type(value: int):
-        global current_type
+        streamlit.session_state["total_price"] = calculate_price(ticket_type=value,
+                                      adults=adults,
+                                      kids=kids, ticket_subtype=ticket_type)
         streamlit.session_state["current_ticket_type"] = value
 
     def create_select_button(key: str, index: int):
@@ -103,3 +111,6 @@ with streamlit.container():
                       """)
     create_select_button(key="prime_ticket_type_select", index=1)
 
+    streamlit.divider()
+
+    streamlit.write(f"Total Price: ${streamlit.session_state.get("total_price")}")
